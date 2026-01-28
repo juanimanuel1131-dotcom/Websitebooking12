@@ -269,37 +269,25 @@
 
     <script>
         // --- 1. KONFIGURASI FIREBASE ---
-        // GANTI BAGIAN INI DENGAN CONFIG DARI FIREBASE CONSOLE ANDA
-        // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyC2mT-W_mF-sz6sOsSnQT5pqOmBCdhXQX0",
-  authDomain: "booking-website-v1-eaaf6.firebaseapp.com",
-  projectId: "booking-website-v1-eaaf6",
-  storageBucket: "booking-website-v1-eaaf6.firebasestorage.app",
-  messagingSenderId: "1076387132937",
-  appId: "1:1076387132937:web:f386aafceaaaae0dc8ead8",
-  measurementId: "G-J389XWGD19"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2mT-W_mF-sz6sOsSnQT5pqOmBCdhXQX0",
+            authDomain: "booking-website-v1-eaaf6.firebaseapp.com",
+            projectId: "booking-website-v1-eaaf6",
+            storageBucket: "booking-website-v1-eaaf6.firebasestorage.app",
+            messagingSenderId: "1076387132937",
+            appId: "1:1076387132937:web:f386aafceaaaae0dc8ead8",
+            measurementId: "G-J389XWGD19",
+            // SAYA TAMBAHKAN MANUAL DI SINI. JIKA ERROR, CEK FIREBASE CONSOLE:
+            databaseURL: "https://booking-website-v1-eaaf6-default-rtdb.firebaseio.com"
         };
 
-        // Initialize Firebase
+        // Initialize Firebase (Versi 8 Style)
         if (!firebase.apps.length) {
             try {
                 firebase.initializeApp(firebaseConfig);
             } catch (e) {
-                console.error("Firebase config error: Pastikan Anda sudah mengisi firebaseConfig dengan benar!");
-                alert("Error: Konfigurasi Firebase belum diisi. Hubungi Admin.");
+                console.error("Firebase config error:", e);
+                alert("Error Config: " + e.message);
             }
         }
         const db = firebase.database();
@@ -333,7 +321,7 @@ const analytics = getAnalytics(app);
                 
                 renderSeats();
             }, (error) => {
-                alert("Gagal mengambil data: " + error.message);
+                alert("Gagal mengambil data. Cek Console & Database Rules! Error: " + error.message);
                 document.getElementById('loader').style.display = 'none';
             });
         }
@@ -457,4 +445,3 @@ const analytics = getAnalytics(app);
     </script>
 </body>
 </html>
-
