@@ -1,28 +1,28 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini Bioskop SMA Bhakti Ananda</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
-        /* --- CSS VARIABLES --- */
+        /* --- CSS VARIABLES & THEME --- */
         :root {
             --primary-red: #b71c1c;
             --accent-gold: #d4af37;
             --bg-dark: #0f0f0f;
-            --seat-available: #333;
             --text-main: #f0f0f0;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             background-color: var(--bg-dark);
-            /* Gradien statis lebih ringan untuk HP daripada radial-gradient kompleks */
-            background: #111; 
+            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
@@ -31,281 +31,185 @@
             justify-content: center;
             font-family: 'Poppins', sans-serif;
             overflow-x: hidden;
-            /* Mencegah scroll mental-mentul di iOS */
-            overscroll-behavior-y: none;
         }
 
         /* --- TYPOGRAPHY & ANIMATION --- */
         h1, h2, h3 { font-family: 'Playfair Display', serif; }
 
         @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
+            from { opacity: 0; transform: translateY(-30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes screenPulse {
-            from { box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1); }
-            to { box-shadow: 0 10px 40px rgba(255, 255, 255, 0.3); }
-        }
-
-        /* --- PAGE 1: HOME --- */
+        /* --- HALAMAN DEPAN (PAGE 1) --- */
         #session-page {
             text-align: center;
-            animation: fadeInDown 0.8s ease;
+            animation: fadeInDown 1.2s ease;
             padding: 20px;
-            width: 90%;
-            max-width: 400px;
             border: 1px solid #333;
             border-radius: 20px;
-            background: rgba(30, 30, 30, 0.5);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 90%;
         }
 
         .school-name {
-            font-size: 0.9rem;
-            letter-spacing: 2px;
-            color: var(--accent-gold);
-            margin-bottom: 10px;
-            text-transform: uppercase;
+            font-size: 1rem; letter-spacing: 3px; color: var(--accent-gold);
+            margin-bottom: 10px; text-transform: uppercase;
         }
 
         .main-title {
-            font-size: 2.2rem;
-            margin-bottom: 0.5rem;
-            color: #fff;
-            text-transform: uppercase;
-            line-height: 1.1;
+            font-size: 2.5rem; margin-bottom: 1rem; color: #fff;
+            text-transform: uppercase; line-height: 1.2;
         }
 
-        .subtitle {
-            font-size: 1rem;
-            color: #aaa;
-            margin-bottom: 1.5rem;
-            font-style: italic;
-        }
+        .subtitle { font-size: 1rem; color: #aaa; margin-bottom: 2rem; font-style: italic; }
 
         .session-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 15px 0;
-            background: #222;
-            border: 1px solid var(--accent-gold);
-            color: var(--accent-gold);
-            font-size: 1rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-            cursor: pointer;
-            border-radius: 50px;
-            touch-action: manipulation; /* Anti delay di HP */
-            transition: transform 0.2s, background 0.2s;
+            display: block; width: 100%; max-width: 280px; padding: 18px; margin: 15px auto;
+            background: linear-gradient(45deg, #1a1a1a, #333);
+            border: 1px solid var(--accent-gold); color: var(--accent-gold);
+            font-size: 1.1rem; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; transition: all 0.4s ease; border-radius: 50px;
         }
 
-        .session-btn:active {
-            transform: scale(0.98);
-            background: var(--accent-gold);
-            color: #000;
+        .session-btn:hover {
+            background: var(--accent-gold); color: #000;
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.4); transform: translateY(-3px);
         }
 
         .reset-link {
-            margin-top: 30px;
-            font-size: 0.8rem;
-            color: #555;
-            text-decoration: underline;
-            cursor: pointer;
-            padding: 10px;
+            margin-top: 30px; font-size: 0.8rem; color: #555;
+            text-decoration: underline; cursor: pointer; transition: 0.3s;
         }
+        .reset-link:hover { color: var(--primary-red); }
 
-        /* --- PAGE 2: CINEMA --- */
+        /* --- HALAMAN BIOSKOP (PAGE 2) --- */
         #cinema-page {
-            display: none;
-            width: 100%;
-            max-width: 600px;
-            padding: 10px;
-            flex-direction: column;
-            align-items: center;
-            animation: fadeInDown 0.5s ease;
+            display: none; width: 100%; max-width: 900px; padding: 20px;
+            flex-direction: column; align-items: center; animation: fadeInDown 0.8s ease;
         }
 
         .top-bar {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 0 10px;
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 15px;
         }
 
         .back-btn {
-            background: transparent;
-            border: 1px solid #555;
-            color: #aaa;
-            padding: 8px 15px;
-            font-size: 0.9rem;
-            border-radius: 20px;
-            cursor: pointer;
+            background: transparent; border: 1px solid #555; color: #aaa;
+            padding: 8px 20px; cursor: pointer; border-radius: 20px; transition: 0.3s;
         }
+        .back-btn:hover { border-color: white; color: white; }
 
-        .session-info { color: var(--accent-gold); font-size: 1.2rem; }
+        .session-info { color: var(--accent-gold); font-size: 1.5rem; }
 
-        /* --- LAYOUT KURSI (OPTIMIZED FOR MOBILE) --- */
+        /* --- LAYOUT KURSI --- */
         .theater-container {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            gap: 4vw; /* Jarak responsif */
-            margin-bottom: 30px;
-            width: 100%;
+            display: flex; justify-content: center; gap: 40px; margin-bottom: 50px;
         }
 
-        .seat-block {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 2vw; /* Jarak antar kursi responsif */
-        }
+        .seat-block { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 
         .aisle-labels {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            color: #444;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-align: center;
-            width: 30px;
-            padding: 10px 0;
+            display: flex; flex-direction: column; justify-content: space-between;
+            color: #444; font-size: 0.9rem; font-weight: 600; text-align: center;
+            width: 60px; padding: 20px 0; letter-spacing: 2px;
         }
 
-        /* Kursi dengan ukuran dinamis (vw) agar pas di HP */
         .seat {
-            width: 9vw;  /* Lebar menyesuaikan layar */
-            height: 9vw; /* Tinggi menyesuaikan layar */
-            max-width: 50px; /* Batas maksimal di layar besar */
-            max-height: 50px;
-            background: #333;
-            border-top: 2px solid #555;
-            border-radius: 6px 6px 8px 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            font-size: 0.75rem; /* Font agak kecil */
-            font-weight: 600;
-            position: relative;
-            touch-action: manipulation;
-            /* GPU Acceleration untuk performa smooth */
-            will-change: transform, background-color; 
-            transition: transform 0.1s;
+            width: 55px; height: 55px;
+            background: linear-gradient(to bottom, #444, #222);
+            border-top: 3px solid #555; border-radius: 8px 8px 12px 12px;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; position: relative;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 0.9rem; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            user-select: none; /* Mencegah seleksi teks saat klik cepat */
         }
 
-        /* Efek Active (Sentuh) di HP */
-        .seat:active:not(.booked) {
-            transform: scale(0.9);
-            background: var(--accent-gold);
-            color: black;
+        .seat:hover:not(.booked) {
+            transform: scale(1.15); background: var(--accent-gold);
+            border-color: #fff; color: #000; box-shadow: 0 0 15px var(--accent-gold); z-index: 10;
         }
 
         .seat.booked {
-            background: var(--primary-red);
-            border-top-color: #ff5252;
-            cursor: not-allowed;
-            color: white;
+            background: linear-gradient(to bottom, #d32f2f, #8e0000);
+            border-top: 3px solid #ff5252; cursor: not-allowed; color: white;
         }
 
         .booked-info {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            width: 100%; height: 100%; padding: 2px;
         }
-        
-        /* Font nama dikecilkan agar muat di kotak kecil HP */
-        .booked-name { font-size: 0.55rem; font-weight: bold; line-height: 1; margin-bottom: 1px; white-space: nowrap; }
-        .booked-class { font-size: 0.45rem; opacity: 0.9; white-space: nowrap; }
+        .booked-name { font-size: 0.6rem; font-weight: bold; line-height: 1; margin-bottom: 2px; }
+        .booked-class { font-size: 0.5rem; opacity: 0.9; }
 
         /* --- SCREEN --- */
         .screen-container {
-            width: 95%;
-            perspective: 300px;
-            text-align: center;
-            margin-top: 10px;
+            width: 90%; perspective: 600px; text-align: center; margin-top: 20px;
         }
-
         .screen {
-            background: #eee;
-            height: 40px;
-            width: 100%;
-            transform: rotateX(-10deg);
-            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: black;
-            font-weight: 900;
-            font-size: 1.2rem;
-            letter-spacing: 5px;
-            border-radius: 5px;
-            animation: screenPulse 3s infinite alternate;
+            background: white; height: 70px; width: 100%;
+            transform: rotateX(-20deg) scale(0.9);
+            box-shadow: 0 20px 60px rgba(255, 255, 255, 0.4);
+            display: flex; align-items: center; justify-content: center;
+            color: black; font-family: 'Playfair Display', serif;
+            font-weight: 900; font-size: 2rem; letter-spacing: 8px;
+            border-radius: 10px; animation: screenPulse 4s infinite alternate;
+        }
+        @keyframes screenPulse {
+            from { box-shadow: 0 20px 40px rgba(255, 255, 255, 0.2); }
+            to { box-shadow: 0 20px 80px rgba(255, 255, 255, 0.5); }
         }
 
         /* --- MODAL FORM --- */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); justify-content: center; align-items: center;
+            z-index: 100; backdrop-filter: blur(5px);
         }
 
         .modal {
-            background: #1a1a1a;
-            padding: 25px;
-            border-radius: 15px;
-            width: 85%; /* Lebar responsif */
-            max-width: 320px;
-            border: 1px solid var(--accent-gold);
-            text-align: center;
+            background: linear-gradient(135deg, #222, #111); padding: 35px;
+            border-radius: 15px; width: 320px; border: 1px solid var(--accent-gold);
+            text-align: center; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+            animation: fadeInDown 0.3s;
         }
 
-        .modal h3 { margin-bottom: 20px; color: var(--accent-gold); font-size: 1.3rem; }
+        .modal h3 { margin-bottom: 25px; color: var(--accent-gold); }
         
-        .form-group { margin-bottom: 15px; text-align: left; }
-        .form-group label { display: block; font-size: 0.8rem; margin-bottom: 5px; color: #ccc; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; margin-bottom: 8px; color: #aaa; }
         .form-group input { 
             width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; 
-            background: #2a2a2a; color: white; outline: none; font-size: 1rem;
+            background: #333; color: white; outline: none; font-family: 'Poppins';
         }
         .form-group input:focus { border-color: var(--accent-gold); }
 
         .btn-confirm { 
             background: var(--accent-gold); color: #000; border: none; 
-            padding: 12px; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%;
-            margin-top: 10px; font-size: 1rem;
+            padding: 12px 25px; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%;
+            margin-top: 10px; transition: 0.3s;
         }
+        .btn-confirm:hover { background: #fff; box-shadow: 0 0 15px white; }
         
         .btn-cancel {
-            background: transparent; color: #777; border: none; margin-top: 15px; 
-            cursor: pointer; font-size: 0.9rem; padding: 10px;
+            background: transparent; color: #777; border: none; margin-top: 15px; cursor: pointer;
         }
+        .btn-cancel:hover { color: white; }
 
-        /* --- PC / TABLET ENHANCEMENT --- */
-        @media (min-width: 768px) {
-            .seat { width: 50px; height: 50px; font-size: 0.9rem; }
-            .seat-block { gap: 10px; }
-            .theater-container { gap: 50px; }
-            .screen { height: 60px; font-size: 1.8rem; }
-            .booked-name { font-size: 0.7rem; }
-            .booked-class { font-size: 0.6rem; }
-            .seat:hover:not(.booked) {
-                transform: scale(1.1);
-                background: var(--accent-gold);
-                color: black;
-                box-shadow: 0 0 15px var(--accent-gold);
-            }
+        /* Loader */
+        #loader { display: none; color: var(--accent-gold); margin-top: 10px; }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 600px) {
+            .theater-container { gap: 15px; margin-bottom: 30px; }
+            .seat-block { gap: 6px; }
+            .seat { width: 38px; height: 38px; font-size: 0.7rem; border-top-width: 2px; }
+            .aisle-labels { font-size: 0.6rem; width: 40px; }
+            .main-title { font-size: 1.8rem; }
+            .session-btn { width: 100%; }
         }
     </style>
 </head>
@@ -318,6 +222,7 @@
         
         <button class="session-btn" onclick="selectSession(1)">JADWAL SESI 1</button>
         <button class="session-btn" onclick="selectSession(2)">JADWAL SESI 2</button>
+        <div id="loader">Memuat data dari server...</div>
 
         <div class="reset-link" onclick="adminResetSystem()">
             [ Admin: Reset Semua Kursi ]
@@ -332,10 +237,12 @@
 
         <div class="theater-container">
             <div class="seat-block" id="left-block"></div>
+
             <div class="aisle-labels">
-                <div>B</div>
-                <div>F</div>
+                <div>BACK</div>
+                <div>FRONT</div>
             </div>
+
             <div class="seat-block" id="right-block"></div>
         </div>
 
@@ -361,102 +268,125 @@
     </div>
 
     <script>
-        // --- DATA & LOGIC ---
+        // --- 1. KONFIGURASI FIREBASE ---
+        // GANTI BAGIAN INI DENGAN CONFIG DARI FIREBASE CONSOLE ANDA
+        const firebaseConfig = {
+            apiKey: "ISI_API_KEY_ANDA_DISINI",
+            authDomain: "PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://PROJECT_ID-default-rtdb.firebaseio.com", // Pastikan URL ini benar
+            projectId: "PROJECT_ID",
+            storageBucket: "PROJECT_ID.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            try {
+                firebase.initializeApp(firebaseConfig);
+            } catch (e) {
+                console.error("Firebase config error: Pastikan Anda sudah mengisi firebaseConfig dengan benar!");
+                alert("Error: Konfigurasi Firebase belum diisi. Hubungi Admin.");
+            }
+        }
+        const db = firebase.database();
+
+        // --- 2. DATA STRUKTUR ---
         const rows = ['D', 'C', 'B', 'A']; 
         const leftCols = [8, 7, 6, 5];
         const rightCols = [4, 3, 2, 1];
         
         let currentSession = null;
         let selectedSeatId = null;
+        let sessionData = {}; // Menyimpan data kursi yang sedang aktif
 
-        function getStorageData() {
-            const data = localStorage.getItem('nobarData');
-            return data ? JSON.parse(data) : { 1: {}, 2: {} };
-        }
+        // --- 3. LOGIKA NAVIGASI & REALTIME ---
 
-        function saveStorageData(data) {
-            localStorage.setItem('nobarData', JSON.stringify(data));
-        }
-
-        // --- FITUR RESET DENGAN PASSWORD ---
-        function adminResetSystem() {
-            const password = prompt("Masukkan Password Admin untuk Reset Sistem:");
-            if (password === "Juanganteng") {
-                if (confirm("Hapus SEMUA data booking?")) {
-                    localStorage.removeItem('nobarData');
-                    alert("Sistem berhasil direset.");
-                    location.reload();
-                }
-            } else if (password !== null) {
-                alert("PASSWORD SALAH!");
-            }
-        }
-
-        // --- NAVIGASI ---
         function selectSession(session) {
             currentSession = session;
-            document.getElementById('session-page').style.display = 'none';
-            document.getElementById('cinema-page').style.display = 'flex';
-            document.getElementById('session-title').innerText = `SESI ${session}`;
-            renderSeats();
+            document.getElementById('loader').style.display = 'block';
+
+            // Dengar perubahan data secara Realtime dari Firebase
+            const sessionRef = db.ref('sessions/' + currentSession);
+            
+            sessionRef.on('value', (snapshot) => {
+                sessionData = snapshot.val() || {}; // Ambil data atau objek kosong
+                
+                // Pindah halaman & Render setelah data didapat
+                document.getElementById('session-page').style.display = 'none';
+                document.getElementById('cinema-page').style.display = 'flex';
+                document.getElementById('session-title').innerText = `SESI ${session}`;
+                document.getElementById('loader').style.display = 'none';
+                
+                renderSeats();
+            }, (error) => {
+                alert("Gagal mengambil data: " + error.message);
+                document.getElementById('loader').style.display = 'none';
+            });
         }
 
         function goBack() {
+            // Matikan listener database saat kembali agar tidak boros kuota
+            if(currentSession) {
+                db.ref('sessions/' + currentSession).off();
+            }
             document.getElementById('cinema-page').style.display = 'none';
             document.getElementById('session-page').style.display = 'block';
             currentSession = null;
         }
 
-        // --- RENDER SEATS ---
+        // --- 4. RENDER KURSI ---
         function renderSeats() {
             const leftContainer = document.getElementById('left-block');
             const rightContainer = document.getElementById('right-block');
-            const data = getStorageData();
-            const sessionData = data[currentSession];
 
             leftContainer.innerHTML = '';
             rightContainer.innerHTML = '';
 
             rows.forEach(row => {
-                leftCols.forEach(col => createSeatElement(leftContainer, row, col, sessionData));
-                rightCols.forEach(col => createSeatElement(rightContainer, row, col, sessionData));
+                leftCols.forEach(col => createSeatElement(leftContainer, row, col));
+                rightCols.forEach(col => createSeatElement(rightContainer, row, col));
             });
         }
 
-        function createSeatElement(container, row, col, sessionData) {
+        function createSeatElement(container, row, col) {
             const seatId = `${col}${row}`;
             const seatDiv = document.createElement('div');
             seatDiv.className = 'seat';
             seatDiv.id = seatId;
 
+            // Cek apakah kursi ada di data Firebase
             if (sessionData[seatId]) {
+                const booking = sessionData[seatId];
                 seatDiv.classList.add('booked');
-                // Potong nama jadi lebih pendek agar muat di HP (max 6 huruf)
-                let displayName = sessionData[seatId].name;
-                if(displayName.length > 6) displayName = displayName.substring(0, 6) + '.';
-                
                 seatDiv.innerHTML = `
                     <div class="booked-info">
-                        <div class="booked-name">${displayName}</div>
-                        <div class="booked-class">${sessionData[seatId].userClass}</div>
+                        <div class="booked-name">${booking.name.substring(0, 8)}</div>
+                        <div class="booked-class">${booking.userClass}</div>
                     </div>
                 `;
+                // Kursi booked tidak bisa diklik
             } else {
                 seatDiv.innerHTML = `<span class="seat-id">${seatId}</span>`;
-                seatDiv.onclick = () => openModal(seatId);
+                // Kursi kosong bisa diklik
+                seatDiv.addEventListener('click', () => openModal(seatId));
             }
             container.appendChild(seatDiv);
         }
 
-        // --- MODAL & BOOKING ---
+        // --- 5. BOOKING LOGIC ---
         function openModal(seatId) {
+            // Cek sekali lagi apakah kursi sudah diambil orang lain saat jeda waktu
+            if (sessionData[seatId]) {
+                alert("Maaf, kursi ini baru saja diambil orang lain!");
+                return;
+            }
             selectedSeatId = seatId;
             document.getElementById('modal-seat-id').innerText = seatId;
             document.getElementById('input-name').value = '';
             document.getElementById('input-class').value = '';
             document.getElementById('booking-modal').style.display = 'flex';
-            // Fokus input dihapus di mobile agar keyboard tidak pop-up mengganggu layout awal
-            // document.getElementById('input-name').focus(); 
+            document.getElementById('input-name').focus();
         }
 
         function closeModal() {
@@ -473,108 +403,44 @@
                 return;
             }
 
-            const data = getStorageData();
-            data[currentSession][selectedSeatId] = { name, userClass };
-            saveStorageData(data);
-
-            closeModal();
-            renderSeats();
+            // SIMPAN KE FIREBASE
+            // Path: sessions/{sesi_ke}/{kode_kursi}
+            db.ref('sessions/' + currentSession + '/' + selectedSeatId).set({
+                name: name,
+                userClass: userClass,
+                timestamp: Date.now()
+            }).then(() => {
+                // Sukses
+                closeModal();
+                // Tidak perlu render manual, karena listener .on('value') akan otomatis merender ulang
+            }).catch((error) => {
+                alert("Gagal memesan: " + error.message);
+            });
         }
 
+        // --- 6. ADMIN RESET ---
+        function adminResetSystem() {
+            const password = prompt("Masukkan Password Admin untuk Reset Sistem:");
+            
+            if (password === "Juanganteng") {
+                const confirmAction = confirm("PERINGATAN: Ini akan menghapus SEMUA data di Server Firebase. Yakin?");
+                if (confirmAction) {
+                    db.ref('sessions').remove()
+                        .then(() => {
+                            alert("Sistem berhasil direset. Semua kursi kosong kembali.");
+                            location.reload();
+                        })
+                        .catch((error) => alert("Gagal reset: " + error.message));
+                }
+            } else if (password !== null) {
+                alert("PASSWORD SALAH!");
+            }
+        }
+
+        // Klik di luar modal untuk menutup
         window.onclick = function(event) {
             if (event.target == document.getElementById('booking-modal')) closeModal();
         }
-<script type="module">
-        // 1. Import Library Firebase menggunakan URL (CDN) agar jalan di Browser
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-        // Tambahan penting: Import Firestore (Database)
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // 2. Konfigurasi Firebase (Sesuai data Anda)
-        const firebaseConfig = {
-            apiKey: "AIzaSyC2mT-W_mF-sz6sOsSnQT5pqOmBCdhXQX0",
-            authDomain: "booking-website-v1-eaaf6.firebaseapp.com",
-            projectId: "booking-website-v1-eaaf6",
-            storageBucket: "booking-website-v1-eaaf6.firebasestorage.app",
-            messagingSenderId: "1076387132937",
-            appId: "1:1076387132937:web:f386aafceaaaae0dc8ead8",
-            measurementId: "G-J389XWGD19"
-        };
-
-        // 3. Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const db = getFirestore(app); // Menyiapkan Database
-
-        // --- LOGIKA PROGRAM ---
-
-        // Referensi ke elemen HTML
-        const txtNama = document.getElementById('namaInput');
-        const txtTanggal = document.getElementById('tanggalInput');
-        const btnSimpan = document.getElementById('tombolBooking');
-        const listOutput = document.getElementById('daftarBooking');
-
-        // A. FUNGSI MENYIMPAN DATA (CREATE)
-        btnSimpan.addEventListener('click', async () => {
-            const nama = txtNama.value;
-            const tanggal = txtTanggal.value;
-
-            if (!nama || !tanggal) {
-                alert("Mohon isi nama dan tanggal!");
-                return;
-            }
-
-            btnSimpan.innerText = "Menyimpan..."; // Feedback visual
-            btnSimpan.disabled = true;
-
-            try {
-                // Simpan ke koleksi 'bookings' di Firestore
-                await addDoc(collection(db, "bookings"), {
-                    nama_pemesan: nama,
-                    tanggal_booking: tanggal,
-                    waktu_input: new Date() // Untuk urutan
-                });
-                
-                alert("Booking Berhasil Tersimpan!");
-                txtNama.value = ""; // Reset form
-                txtTanggal.value = "";
-            } catch (error) {
-                console.error("Error:", error);
-                alert("Gagal menyimpan: " + error.message);
-            } finally {
-                btnSimpan.innerText = "Kirim Booking";
-                btnSimpan.disabled = false;
-            }
-        });
-
-        // B. FUNGSI MEMBACA DATA REAL-TIME (READ)
-        // Mengambil data dari koleksi 'bookings', diurutkan berdasarkan waktu input
-        const q = query(collection(db, "bookings"), orderBy("waktu_input", "desc"));
-
-        onSnapshot(q, (snapshot) => {
-            listOutput.innerHTML = ""; // Bersihkan list lama
-            
-            if (snapshot.empty) {
-                listOutput.innerHTML = "<li>Belum ada data booking.</li>";
-                return;
-            }
-
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                // Buat tampilan list HTML
-                const li = document.createElement('li');
-                li.innerHTML = `<strong>${data.nama_pemesan}</strong> - ${data.tanggal_booking}`;
-                listOutput.appendChild(li);
-            });
-        }, (error) => {
-            console.log("Error mengambil data:", error);
-            // Jika error permission denied, berarti Rules di console belum diset ke Test Mode
-            if(error.code === 'permission-denied') {
-                listOutput.innerHTML = "<li style='color:red'>Error: Izin Ditolak. Pastikan Firestore Rules dalam 'Test Mode'.</li>";
-            }
-        });
-
     </script>
 </body>
 </html>
