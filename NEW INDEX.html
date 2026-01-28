@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mini Bioskop SMA Bhakti Ananda</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS VARIABLES --- */
+        :root {
+            --primary-red: #b71c1c;
+            --accent-gold: #d4af37;
+            --bg-dark: #0f0f0f;
+            --seat-available: #333;
+            --text-main: #f0f0f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-dark);
+            /* Gradien statis lebih ringan untuk HP daripada radial-gradient kompleks */
+            background: #111; 
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            /* Mencegah scroll mental-mentul di iOS */
+            overscroll-behavior-y: none;
+        }
+
+        /* --- TYPOGRAPHY & ANIMATION --- */
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes screenPulse {
+            from { box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1); }
+            to { box-shadow: 0 10px 40px rgba(255, 255, 255, 0.3); }
+        }
+
+        /* --- PAGE 1: HOME --- */
+        #session-page {
+            text-align: center;
+            animation: fadeInDown 0.8s ease;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #333;
+            border-radius: 20px;
+            background: rgba(30, 30, 30, 0.5);
+        }
+
+        .school-name {
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .main-title {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #aaa;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .session-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 15px 0;
+            background: #222;
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            font-size: 1rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 50px;
+            touch-action: manipulation; /* Anti delay di HP */
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .session-btn:active {
+            transform: scale(0.98);
+            background: var(--accent-gold);
+            color: #000;
+        }
+
+        .reset-link {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: #555;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        /* --- PAGE 2: CINEMA --- */
+        #cinema-page {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            padding: 10px;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeInDown 0.5s ease;
+        }
+
+        .top-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid #555;
+            color: #aaa;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .session-info { color: var(--accent-gold); font-size: 1.2rem; }
+
+        /* --- LAYOUT KURSI (OPTIMIZED FOR MOBILE) --- */
+        .theater-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 4vw; /* Jarak responsif */
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .seat-block {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2vw; /* Jarak antar kursi responsif */
+        }
+
+        .aisle-labels {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #444;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-align: center;
+            width: 30px;
+            padding: 10px 0;
+        }
+
+        /* Kursi dengan ukuran dinamis (vw) agar pas di HP */
+        .seat {
+            width: 9vw;  /* Lebar menyesuaikan layar */
+            height: 9vw; /* Tinggi menyesuaikan layar */
+            max-width: 50px; /* Batas maksimal di layar besar */
+            max-height: 50px;
+            background: #333;
+            border-top: 2px solid #555;
+            border-radius: 6px 6px 8px 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.75rem; /* Font agak kecil */
+            font-weight: 600;
+            position: relative;
+            touch-action: manipulation;
+            /* GPU Acceleration untuk performa smooth */
+            will-change: transform, background-color; 
+            transition: transform 0.1s;
+        }
+
+        /* Efek Active (Sentuh) di HP */
+        .seat:active:not(.booked) {
+            transform: scale(0.9);
+            background: var(--accent-gold);
+            color: black;
+        }
+
+        .seat.booked {
+            background: var(--primary-red);
+            border-top-color: #ff5252;
+            cursor: not-allowed;
+            color: white;
+        }
+
+        .booked-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        /* Font nama dikecilkan agar muat di kotak kecil HP */
+        .booked-name { font-size: 0.55rem; font-weight: bold; line-height: 1; margin-bottom: 1px; white-space: nowrap; }
+        .booked-class { font-size: 0.45rem; opacity: 0.9; white-space: nowrap; }
+
+        /* --- SCREEN --- */
+        .screen-container {
+            width: 95%;
+            perspective: 300px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .screen {
+            background: #eee;
+            height: 40px;
+            width: 100%;
+            transform: rotateX(-10deg);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            font-weight: 900;
+            font-size: 1.2rem;
+            letter-spacing: 5px;
+            border-radius: 5px;
+            animation: screenPulse 3s infinite alternate;
+        }
+
+        /* --- MODAL FORM --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: #1a1a1a;
+            padding: 25px;
+            border-radius: 15px;
+            width: 85%; /* Lebar responsif */
+            max-width: 320px;
+            border: 1px solid var(--accent-gold);
+            text-align: center;
+        }
+
+        .modal h3 { margin-bottom: 20px; color: var(--accent-gold); font-size: 1.3rem; }
+        
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 0.8rem; margin-bottom: 5px; color: #ccc; }
+        .form-group input { 
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; 
+            background: #2a2a2a; color: white; outline: none; font-size: 1rem;
+        }
+        .form-group input:focus { border-color: var(--accent-gold); }
+
+        .btn-confirm { 
+            background: var(--accent-gold); color: #000; border: none; 
+            padding: 12px; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%;
+            margin-top: 10px; font-size: 1rem;
+        }
+        
+        .btn-cancel {
+            background: transparent; color: #777; border: none; margin-top: 15px; 
+            cursor: pointer; font-size: 0.9rem; padding: 10px;
+        }
+
+        /* --- PC / TABLET ENHANCEMENT --- */
+        @media (min-width: 768px) {
+            .seat { width: 50px; height: 50px; font-size: 0.9rem; }
+            .seat-block { gap: 10px; }
+            .theater-container { gap: 50px; }
+            .screen { height: 60px; font-size: 1.8rem; }
+            .booked-name { font-size: 0.7rem; }
+            .booked-class { font-size: 0.6rem; }
+            .seat:hover:not(.booked) {
+                transform: scale(1.1);
+                background: var(--accent-gold);
+                color: black;
+                box-shadow: 0 0 15px var(--accent-gold);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="session-page">
+        <div class="school-name">MINI BIOSKOP KELAS 12<br>SMA BHAKTI ANANDA</div>
+        <h1 class="main-title">The Battle of<br>Surabaya</h1>
+        <p class="subtitle">Nonton Bareng & Apresiasi Film</p>
+        
+        <button class="session-btn" onclick="selectSession(1)">JADWAL SESI 1</button>
+        <button class="session-btn" onclick="selectSession(2)">JADWAL SESI 2</button>
+
+        <div class="reset-link" onclick="adminResetSystem()">
+            [ Admin: Reset Semua Kursi ]
+        </div>
+    </div>
+
+    <div id="cinema-page">
+        <div class="top-bar">
+            <button class="back-btn" onclick="goBack()">← Kembali</button>
+            <h3 class="session-info" id="session-title">SESI 1</h3>
+        </div>
+
+        <div class="theater-container">
+            <div class="seat-block" id="left-block"></div>
+            <div class="aisle-labels">
+                <div>B</div>
+                <div>F</div>
+            </div>
+            <div class="seat-block" id="right-block"></div>
+        </div>
+
+        <div class="screen-container">
+            <div class="screen">SCREEN</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="booking-modal">
+        <div class="modal">
+            <h3>Booking Kursi <span id="modal-seat-id" style="color:white"></span></h3>
+            <div class="form-group">
+                <label>Nama Lengkap</label>
+                <input type="text" id="input-name" placeholder="Nama siswa..." autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Kelas</label>
+                <input type="text" id="input-class" placeholder="Contoh: XII IPA 2" autocomplete="off">
+            </div>
+            <button class="btn-confirm" onclick="confirmBooking()">SIMPAN KURSI</button>
+            <button class="btn-cancel" onclick="closeModal()">Batal</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & LOGIC ---
+        const rows = ['D', 'C', 'B', 'A']; 
+        const leftCols = [8, 7, 6, 5];
+        const rightCols = [4, 3, 2, 1];
+        
+        let currentSession = null;
+        let selectedSeatId = null;
+
+        function getStorageData() {
+            const data = localStorage.getItem('nobarData');
+            return data ? JSON.parse(data) : { 1: {}, 2: {} };
+        }
+
+        function saveStorageData(data) {
+            localStorage.setItem('nobarData', JSON.stringify(data));
+        }
+
+        // --- FITUR RESET DENGAN PASSWORD ---
+        function adminResetSystem() {
+            const password = prompt("Masukkan Password Admin untuk Reset Sistem:");
+            if (password === "Juanganteng") {
+                if (confirm("Hapus SEMUA data booking?")) {
+                    localStorage.removeItem('nobarData');
+                    alert("Sistem berhasil direset.");
+                    location.reload();
+                }
+            } else if (password !== null) {
+                alert("PASSWORD SALAH!");
+            }
+        }
+
+        // --- NAVIGASI ---
+        function selectSession(session) {
+            currentSession = session;
+            document.getElementById('session-page').style.display = 'none';
+            document.getElementById('cinema-page').style.display = 'flex';
+            document.getElementById('session-title').innerText = `SESI ${session}`;
+            renderSeats();
+        }
+
+        function goBack() {
+            document.getElementById('cinema-page').style.display = 'none';
+            document.getElementById('session-page').style.display = 'block';
+            currentSession = null;
+        }
+
+        // --- RENDER SEATS ---
+        function renderSeats() {
+            const leftContainer = document.getElementById('left-block');
+            const rightContainer = document.getElementById('right-block');
+            const data = getStorageData();
+            const sessionData = data[currentSession];
+
+            leftContainer.innerHTML = '';
+            rightContainer.innerHTML = '';
+
+            rows.forEach(row => {
+                leftCols.forEach(col => createSeatElement(leftContainer, row, col, sessionData));
+                rightCols.forEach(col => createSeatElement(rightContainer, row, col, sessionData));
+            });
+        }
+
+        function createSeatElement(container, row, col, sessionData) {
+            const seatId = `${col}${row}`;
+            const seatDiv = document.createElement('div');
+            seatDiv.className = 'seat';
+            seatDiv.id = seatId;
+
+            if (sessionData[seatId]) {
+                seatDiv.classList.add('booked');
+                // Potong nama jadi lebih pendek agar muat di HP (max 6 huruf)
+                let displayName = sessionData[seatId].name;
+                if(displayName.length > 6) displayName = displayName.substring(0, 6) + '.';
+                
+                seatDiv.innerHTML = `
+                    <div class="booked-info">
+                        <div class="booked-name">${displayName}</div>
+                        <div class="booked-class">${sessionData[seatId].userClass}</div>
+                    </div>
+                `;
+            } else {
+                seatDiv.innerHTML = `<span class="seat-id">${seatId}</span>`;
+                seatDiv.onclick = () => openModal(seatId);
+            }
+            container.appendChild(seatDiv);
+        }
+
+        // --- MODAL & BOOKING ---
+        function openModal(seatId) {
+            selectedSeatId = seatId;
+            document.getElementById('modal-seat-id').innerText = seatId;
+            document.getElementById('input-name').value = '';
+            document.getElementById('input-class').value = '';
+            document.getElementById('booking-modal').style.display = 'flex';
+            // Fokus input dihapus di mobile agar keyboard tidak pop-up mengganggu layout awal
+            // document.getElementById('input-name').focus(); 
+        }
+
+        function closeModal() {
+            document.getElementById('booking-modal').style.display = 'none';
+            selectedSeatId = null;
+        }
+
+        function confirmBooking() {
+            const name = document.getElementById('input-name').value.trim();
+            const userClass = document.getElementById('input-class').value.trim();
+
+            if (!name || !userClass) {
+                alert("Harap isi Nama dan Kelas!");
+                return;
+            }
+
+            const data = getStorageData();
+            data[currentSession][selectedSeatId] = { name, userClass };
+            saveStorageData(data);
+
+            closeModal();
+            renderSeats();
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('booking-modal')) closeModal();
+        }
+    </script>
+</body>
+</html>
