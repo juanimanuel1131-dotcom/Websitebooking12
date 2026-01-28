@@ -269,6 +269,7 @@
 
     <script>
         // --- 1. KONFIGURASI FIREBASE ---
+        // Saya sudah menyesuaikan databaseURL dengan format Server Asia (Singapura)
         const firebaseConfig = {
             apiKey: "AIzaSyC2mT-W_mF-sz6sOsSnQT5pqOmBCdhXQX0",
             authDomain: "booking-website-v1-eaaf6.firebaseapp.com",
@@ -277,11 +278,11 @@
             messagingSenderId: "1076387132937",
             appId: "1:1076387132937:web:f386aafceaaaae0dc8ead8",
             measurementId: "G-J389XWGD19",
-            // SAYA TAMBAHKAN MANUAL DI SINI. JIKA ERROR, CEK FIREBASE CONSOLE:
-            databaseURL: "https://booking-website-v1-eaaf6-default-rtdb.firebaseio.com"
+            // INI YANG SAYA PERBAIKI (Server Asia / Singapore):
+            databaseURL: "https://booking-website-v1-eaaf6-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
 
-        // Initialize Firebase (Versi 8 Style)
+        // Initialize Firebase
         if (!firebase.apps.length) {
             try {
                 firebase.initializeApp(firebaseConfig);
@@ -321,7 +322,7 @@
                 
                 renderSeats();
             }, (error) => {
-                alert("Gagal mengambil data. Cek Console & Database Rules! Error: " + error.message);
+                alert("Gagal mengambil data. Pastikan Internet lancar. Error: " + error.message);
                 document.getElementById('loader').style.display = 'none';
             });
         }
@@ -413,7 +414,6 @@
             }).then(() => {
                 // Sukses
                 closeModal();
-                // Tidak perlu render manual, karena listener .on('value') akan otomatis merender ulang
             }).catch((error) => {
                 alert("Gagal memesan: " + error.message);
             });
