@@ -483,6 +483,97 @@
         window.onclick = function(event) {
             if (event.target == document.getElementById('booking-modal')) closeModal();
         }
+<script type="module">
+        // 1. Import Library Firebase menggunakan URL (CDN) agar jalan di Browser
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        // Tambahan penting: Import Firestore (Database)
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // 2. Konfigurasi Firebase (Sesuai data Anda)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2mT-W_mF-sz6sOsSnQT5pqOmBCdhXQX0",
+            authDomain: "booking-website-v1-eaaf6.firebaseapp.com",
+            projectId: "booking-website-v1-eaaf6",
+            storageBucket: "booking-website-v1-eaaf6.firebasestorage.app",
+            messagingSenderId: "1076387132937",
+            appId: "1:1076387132937:web:f386aafceaaaae0dc8ead8",
+            measurementId: "G-J389XWGD19"
+        };
+
+        // 3. Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app); // Menyiapkan Database
+
+        // --- LOGIKA PROGRAM ---
+
+        // Referensi ke elemen HTML
+        const txtNama = document.getElementById('namaInput');
+        const txtTanggal = document.getElementById('tanggalInput');
+        const btnSimpan = document.getElementById('tombolBooking');
+        const listOutput = document.getElementById('daftarBooking');
+
+        // A. FUNGSI MENYIMPAN DATA (CREATE)
+        btnSimpan.addEventListener('click', async () => {
+            const nama = txtNama.value;
+            const tanggal = txtTanggal.value;
+
+            if (!nama || !tanggal) {
+                alert("Mohon isi nama dan tanggal!");
+                return;
+            }
+
+            btnSimpan.innerText = "Menyimpan..."; // Feedback visual
+            btnSimpan.disabled = true;
+
+            try {
+                // Simpan ke koleksi 'bookings' di Firestore
+                await addDoc(collection(db, "bookings"), {
+                    nama_pemesan: nama,
+                    tanggal_booking: tanggal,
+                    waktu_input: new Date() // Untuk urutan
+                });
+                
+                alert("Booking Berhasil Tersimpan!");
+                txtNama.value = ""; // Reset form
+                txtTanggal.value = "";
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Gagal menyimpan: " + error.message);
+            } finally {
+                btnSimpan.innerText = "Kirim Booking";
+                btnSimpan.disabled = false;
+            }
+        });
+
+        // B. FUNGSI MEMBACA DATA REAL-TIME (READ)
+        // Mengambil data dari koleksi 'bookings', diurutkan berdasarkan waktu input
+        const q = query(collection(db, "bookings"), orderBy("waktu_input", "desc"));
+
+        onSnapshot(q, (snapshot) => {
+            listOutput.innerHTML = ""; // Bersihkan list lama
+            
+            if (snapshot.empty) {
+                listOutput.innerHTML = "<li>Belum ada data booking.</li>";
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                // Buat tampilan list HTML
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${data.nama_pemesan}</strong> - ${data.tanggal_booking}`;
+                listOutput.appendChild(li);
+            });
+        }, (error) => {
+            console.log("Error mengambil data:", error);
+            // Jika error permission denied, berarti Rules di console belum diset ke Test Mode
+            if(error.code === 'permission-denied') {
+                listOutput.innerHTML = "<li style='color:red'>Error: Izin Ditolak. Pastikan Firestore Rules dalam 'Test Mode'.</li>";
+            }
+        });
+
     </script>
 </body>
 </html>
